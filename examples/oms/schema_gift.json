@@ -1,0 +1,47 @@
+[
+  {
+      "database": "postgres",
+      "index": "oms_gift",
+      "nodes": {
+          "table": "gift_campaigns",
+          "primary_key": ["id"],
+          "schema": "public",
+          "columns": [
+              "id",
+              "name",
+              "sme_id",
+              "cond_min_price",
+              "cond_max_price",
+              "act_type",
+              "apply_type"
+
+          ],
+          "children": [
+              {
+                  "table": "gift_cond_items",
+                  "primary_key": ["id"],
+
+                  "columns": [
+                      "id",
+                      "sme_id",
+                      "gift_campaign_id",
+                      "sme_product_id",
+                      "sme_variant_id",
+                      "sme_variant_sku",
+                      "min_quantity"
+                  ],
+                  "relationship": {
+                    "variant": "object",
+                    "type": "one_to_many",
+                    "foreign_key": {
+                      "parent": ["id"],
+                      "child": ["gift_campaign_id"]
+                  }
+                }
+              }
+
+          ]
+      }
+  }
+]
+
