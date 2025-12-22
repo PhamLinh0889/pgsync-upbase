@@ -8,8 +8,11 @@ import time
 import typing as t
 from contextlib import contextmanager
 
+import psycopg2
 import sqlalchemy as sa
+from psycopg2.extras import LogicalReplicationConnection
 from sqlalchemy.dialects import postgresql  # noqa
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
 
 from .constants import (
@@ -1322,18 +1325,23 @@ def pg_engine(
     )
 
 
-def _pg_engine(
+def _pg_connect_config(
+    *,
     database: str,
     user: t.Optional[str] = None,
     host: t.Optional[str] = None,
     password: t.Optional[str] = None,
     port: t.Optional[int] = None,
-    echo: bool = False,
     sslmode: t.Optional[str] = None,
     sslrootcert: t.Optional[str] = None,
     url: t.Optional[str] = None,
-) -> sa.engine.Engine:
+) -> tuple[str, dict]:
+    """
+    Shared config builder for both SQLAlchemy engines and direct psycopg2 connects.
+    Returns (url, connect_args).
+    """
     connect_args: dict = {}
+
     sslmode = sslmode or PG_SSLMODE
     sslrootcert = sslrootcert or PG_SSLROOTCERT
 
@@ -1352,13 +1360,38 @@ def _pg_engine(
         connect_args["sslrootcert"] = sslrootcert
 
     if url is None:
-        url: str = get_database_url(
+        url = get_database_url(
             database,
             user=user,
             host=host,
             password=password,
             port=port,
         )
+
+    return url, connect_args
+
+
+def _pg_engine(
+    database: str,
+    user: t.Optional[str] = None,
+    host: t.Optional[str] = None,
+    password: t.Optional[str] = None,
+    port: t.Optional[int] = None,
+    echo: bool = False,
+    sslmode: t.Optional[str] = None,
+    sslrootcert: t.Optional[str] = None,
+    url: t.Optional[str] = None,
+) -> sa.engine.Engine:
+    url, connect_args = _pg_connect_config(
+        database=database,
+        user=user,
+        host=host,
+        password=password,
+        port=port,
+        sslmode=sslmode,
+        sslrootcert=sslrootcert,
+        url=url,
+    )
 
     # Use NullPool for testing to avoid connection exhaustion
     if SQLALCHEMY_USE_NULLPOOL:
@@ -1383,17 +1416,64 @@ def _pg_engine(
     )
 
 
+def pg_logical_repl_conn(
+    *,
+    database: str,
+    user: t.Optional[str] = None,
+    host: t.Optional[str] = None,
+    password: t.Optional[str] = None,
+    port: t.Optional[int] = None,
+    sslmode: t.Optional[str] = None,
+    sslrootcert: t.Optional[str] = None,
+    url: t.Optional[str] = None,
+) -> psycopg2.extensions.connection:
+    url, connect_args = _pg_connect_config(
+        database=database,
+        user=user,
+        host=host,
+        password=password,
+        port=port,
+        sslmode=sslmode,
+        sslrootcert=sslrootcert,
+        url=url,
+    )
+
+    url_: sa.engine.URL = make_url(url)
+
+    conn: psycopg2.extensions.connection = psycopg2.connect(
+        host=url_.host,
+        port=url_.port or 5432,
+        user=url_.username,
+        password=url_.password,
+        dbname=url_.database,
+        connection_factory=LogicalReplicationConnection,
+        **connect_args,
+    )
+
+    return conn
+
+
 def pg_execute(
     engine: sa.engine.Engine,
     statement: sa.sql.Select,
-    values: t.Optional[list] = None,
+    values: t.Optional[t.Mapping] = None,
     options: t.Optional[dict] = None,
-) -> None:
+) -> sa.engine.Result:
+    """Execute a query statement."""
     with engine.connect() as conn:
         if options:
             conn = conn.execution_options(**options)
-        conn.execute(statement, values)
-        conn.commit()
+
+        # Don't pass `None` as values
+        if values is not None:
+            result = conn.execute(statement, values)
+        else:
+            result = conn.execute(statement)
+
+        # If caller did NOT request AUTOCOMMIT, commit the transaction
+        if not (options and options.get("isolation_level") == "AUTOCOMMIT"):
+            conn.commit()
+        return result
 
 
 def create_schema(database: str, schema: str, echo: bool = False) -> None:

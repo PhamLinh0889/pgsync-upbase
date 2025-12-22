@@ -1,4 +1,4 @@
-# PostgreSQL to Elasticsearch/OpenSearch sync
+# PostgreSQL/MySQL/MariaDB to Elasticsearch/OpenSearch sync
 
 
 - [PGSync](https://pgsync.com) is a middleware for syncing data from [Postgres](https://www.postgresql.org) to [Elasticsearch](https://www.elastic.co/products/elastic-stack)/[OpenSearch](https://opensearch.org/) or [OpenSearch](https://opensearch.org/).
@@ -10,7 +10,7 @@ expose structured denormalized documents in [Elasticsearch](https://www.elastic.
 
 - [Python](https://www.python.org) 3.9+
 - [Postgres](https://www.postgresql.org) 9.6+ or [MySQL](https://www.mysql.com/) 8.0.0+ or [MariaDB](https://mariadb.org/) 12.0.0+ 
-- [Redis](https://redis.io) 3.1.0+ or [Valkey](https://valkey.io) 7.2.0+
+- [Redis](https://redis.io) 3.1.0+ or [Valkey](https://valkey.io) 7.2.0+ (Optional in wal mode)
 - [Elasticsearch](https://www.elastic.co/products/elastic-stack) 6.3.1+ or [OpenSearch](https://opensearch.org/) 1.3.7+
 - [SQLAlchemy](https://www.sqlalchemy.org) 1.3.4+
 

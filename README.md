@@ -73,7 +73,7 @@ Of course, if your data never changed, then you could just take a snapshot in ti
 PGSync is appropriate for you if:
 - [Postgres](https://www.postgresql.org) or [MySQL](https://www.mysql.com/) or [MariaDB](https://mariadb.org/) is your read/write source of truth whilst [Elasticsearch](https://www.elastic.co/products/elastic-stack)/[OpenSearch](https://opensearch.org/) is your 
 read-only search layer.
-- You need to denormalize relational data into a NoSQL data source.
+- You need to denormalize relational data into a NoSQL data source like [Elasticsearch](https://www.elastic.co/products/elastic-stack)/[OpenSearch](https://opensearch.org/).
 - Your data is constantly changing.
 - You have existing data in a relational database such as [Postgres](https://www.postgresql.org) or [MySQL](https://www.mysql.com/) or [MariaDB](https://mariadb.org/) and you need a secondary NoSQL database like [Elasticsearch](https://www.elastic.co/products/elastic-stack)/[OpenSearch](https://opensearch.org/) for text-based queries or autocomplete queries to mirror the existing data without having your application perform dual writes.
 - You want to keep your existing data untouched whilst taking advantage of
@@ -99,7 +99,8 @@ PGSync operates in an event-driven model by creating triggers for tables in your
 
 *This is the only time PGSync will ever make any changes to your database.*
 
-**NOTE**: **If you change the structure of your PGSync's schema config, you would need to rebuild your Elasticsearch/OpenSearch indices.**
+>**NOTE**: **If you change the structure of your PGSync schema config, it's recommended and in most cases necessary to rebuild your Elasticsearch/OpenSearch indices.**
+
 There are plans to support zero-downtime migrations to streamline this process.
 
 
@@ -187,7 +188,6 @@ Environment variable placeholders - full list [here](https://pgsync.com/env-vars
 ### MySQL / MariaDB setup
 
 - Enable binary logging in your MySQL / MariaDB setting.
-
 - You also need to set up the following parameters in your MySQL / MariaDB config my.cnf, then restart the database server.
 
   ```server-id = 1``` # any non-zero unique ID
@@ -195,10 +195,8 @@ Environment variable placeholders - full list [here](https://pgsync.com/env-vars
   ```log_bin = mysql-bin```
 
   ```binlog_row_image = FULL``` # recommended; if not supported on older MariaDB, omit
-
 - optional housekeeping:
   ```binlog_expire_logs_seconds = 604800```   # 7 days
-
 - You need to create a replication user with REPLICATION SLAVE and REPLICATION CLIENT privileges
     
   ```sql
@@ -224,24 +222,26 @@ Environment variable placeholders - full list [here](https://pgsync.com/env-vars
 
 Key features of PGSync are:
 
-- Easily denormalize relational data. 
-- Works with any PostgreSQL database (version 9.6 or later). 
-- Negligible impact on database performance.
-- Transactionally consistent output in Elasticsearch/OpenSearch. This means: writes appear only when they are committed to the database, insert, update and delete operations appear in the same order as they were committed (as opposed to eventual consistency).
-- Fault-tolerant: does not lose data, even if processes crash or a network interruption occurs, etc. The process can be recovered from the last checkpoint.
-- Returns the data directly as Postgres/MySQL/MariaDB JSON from the database for speed.
-- Supports composite primary and foreign keys.
-- Supports Views and Materialized views.
-- Supports an arbitrary depth of nested entities i.e Tables having long chain of relationship dependencies.
-- Supports PostgreSQL/MySQL/MariaDB JSON data fields. This means: we can extract JSON fields in a database table as a separate field in the resulting document.
-- Customizable document structure.
+- Easily denormalize relational data
+- Works with any PostgreSQL database (9.6 or later)
+- Negligible impact on database performance
+- Transactionally consistent output in Elasticsearch/OpenSearch:
+  - Writes appear only after they’re committed
+  - Inserts, updates, and deletes appear in commit order (not eventually)
+- Fault-tolerant: no data loss even on crashes or network issues; processing resumes from the last checkpoint
+- Returns data directly as PostgreSQL/MySQL/MariaDB JSON for speed
+- Supports composite primary and foreign keys
+- Supports views and materialized views
+- Handles arbitrarily deep nesting of related tables
+- Supports PostgreSQL/MySQL/MariaDB JSON fields, allowing JSON properties to be extracted as separate document fields
+- Customizable document structure
 
 
 #### Requirements
 
 - [Python](https://www.python.org) 3.9+
 - [Postgres](https://www.postgresql.org) 9.6+ or [MySQL](https://www.mysql.com/) 5.7.22+ or [MariaDB](https://mariadb.org/) 10.5.0+ 
-- [Redis](https://redis.io) 3.1.0+ or [Valkey](https://valkey.io) 7.2.0+
+- [Redis](https://redis.io) 3.1.0+ or [Valkey](https://valkey.io) 7.2.0+ (Optional in wal mode)
 - [Elasticsearch](https://www.elastic.co/products/elastic-stack) 6.3.1+ or [OpenSearch](https://opensearch.org/) 1.3.7+
 - [SQLAlchemy](https://www.sqlalchemy.org) 1.3.4+
 
@@ -360,23 +360,26 @@ e.g
   }
 ```
 
-PGSync addresses the following challenges:
-- What if we update the author's name in the database?
-- What if we wanted to add another author for an existing book?
-- What if we have lots of documents already with the same author we wanted to change the author name?
-- What if we delete or update an author?
-- What if we truncate an entire table?
+PGSync addresses common data consistency challenges, such as:
+
+- Updating an author's name in the database
+- Adding an additional author to an existing book
+- Changing an author's name across many existing documents
+- Deleting or updating an author record
+- Truncating an entire table and keeping indexes in sync
 
 
 #### Benefits
 
-- PGSync is a simple to use out of the box solution for Change data capture.
-- PGSync handles data deletions.
-- PGSync requires little development effort. You simply define a schema config describing your data.
-- PGSync generates advanced queries matching your schema directly.
-- PGSync allows you to easily rebuild your indexes in case of a schema change.
-- You can expose only the data you require in Elasticsearch/OpenSearch.
-- Supports multiple Postgres/MySQL/MariaDB schemas for multi-tennant applications.
+PGSync is a simple, out-of-the-box solution for change data capture, designed to minimize development effort and keep your search indexes in sync.
+
+- Handles data deletions automatically.
+- Requires minimal setup. Just define a schema config that describes your data.
+- Generates advanced queries directly from your schema.
+- Makes it easy to rebuild indexes after schema changes.
+- Lets you expose only the data you need in Elasticsearch/OpenSearch.
+- Supports multiple Postgres/MySQL/MariaDB schemas for multi-tenant applications.
+
 
 
 #### Contributing
