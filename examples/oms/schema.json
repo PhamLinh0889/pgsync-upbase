@@ -3,7 +3,7 @@
       "database": "postgres",
       "index": "oms_packages",
       "nodes": {
-          "table": "old_logistics_packages",
+          "table": "sc_logistics_packages",
           "primary_key": ["id"],
           "schema": "public",
           "columns": [
@@ -91,7 +91,7 @@
           ],
           "children": [
               {
-                  "table": "old_order",
+                  "table": "sc_order",
                   "primary_key": ["id"],
 
                   "columns": [
@@ -203,7 +203,7 @@
                   }
               },
               {
-                  "table": "old_order_item",
+                  "table": "sc_order_item",
                   "primary_key": ["id"],
 
                   "columns": [

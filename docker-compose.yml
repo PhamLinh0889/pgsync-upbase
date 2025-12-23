@@ -1,12 +1,13 @@
 version: "3.8"
 
 services:
+
     postgres:
         image: debezium/postgres:14
         ports:
             - "15432:5432"
         volumes:
-            - pgsync_postgres_new:/var/lib/postgresql/data
+            - pgsync_staging_new:/var/lib/postgresql/data
         command:
             [
                 "postgres",
@@ -80,4 +81,5 @@ services:
             - CONSOLE_LOGGING_HANDLER_MIN_LEVEL=INFO
             - CHECKPOINT_PATH=/code/checkpoint_path
 volumes:
-    pgsync_postgres_new: {}
+    pgsync_staging_new: {}
+
