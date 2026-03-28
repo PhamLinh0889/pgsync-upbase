@@ -1,16 +1,18 @@
 [
   {
-      "database": "order_connector",
-      "index": "oms_packages",
+      "database": "postgres",
+      "index": "old_oms_packages",
       "nodes": {
-          "table": "sc_logistics_packages",
-          "primary_key": ["id", "sme_id"],
+          "table": "old_logistics_packages",
+          "primary_key": ["id"],
           "schema": "public",
           "columns": [
               "id",
               "connector_channel_code",
               "store_id",
               "sme_id",
+              "is_gsgn",
+              "is_pre_order",
               "package_number",
               "logistics_status",
               "order_id",
@@ -51,23 +53,60 @@
               "logistic_rts_status",
               "is_partial_cancelled",
               "is_partial_cancelled_processed",
-              "pack_no"
+              "pack_no",
+              "sf_session_pick_id",
+              "logistic_provider_connected_id",
+              "logistic_provider_status",
+              "logistic_provider_error",
+              "shipping_service",
+              "shipping_type",
+              "shipping_rule_check",
+              "warehouse_step",
+              "warehouse_last_action",
+              "warehouse_bill_code",
+              "import_bill_id",
+              "warehouse_bill_id",
+              "sf_handover_id",
+              "provider_error_code",
+              "wms_hold",
+              "sf_received_id",
+              "ref_gsgn",
+              "logistic_synced_seller",
+              "pick_shift_id",
+              "date_pick_shift",
+              "pick_work_shift",
+              "date_delivery_shift",
+              "delivery_work_shift",
+              "date_delivery_id",
+              "station_id",
+              "count_sme_variant",
+              "source",
+              "prepared_at",
+              "reauto_wh_no",
+              "last_set_sme_wh",
+              "old_logistics",
+              "logistic_provider_shop_id",
+              "fulfillment_provider_type",
+              "fulfillment_provider_connected_id"
           ],
           "children": [
               {
-                  "table": "sc_order",
-                  "primary_key": ["id", "sme_id"],
+                  "table": "old_order",
+                  "primary_key": ["id"],
+
                   "columns": [
                       "id",
                       "store_id",
                       "sme_id",
                       "shipped_at",
+                      "is_gsgn",
                       "connector_channel_code",
                       "ref_id",
                       "ref_store_id",
                       "ref_number",
                       "currency_code",
                       "is_paid",
+                      "verified_flags",
                       "paid_price",
                       "original_price",
                       "platform_service_fee",
@@ -123,8 +162,36 @@
                       "sme_note",
                       "payment_transaction_code",
                       "person_in_charge",
-                      "last_wh_exported_at"
-
+                      "last_wh_exported_at",
+                      "last_wh_imported_at",
+                      "shipping_fee_by",
+                      "delivery_fail_at",
+                      "fulfillment_provider_wh_code",
+                      "fulfillment_provider_type",
+                      "fulfillment_provider_connected_id",
+                      "related_order_id",
+                      "related_order",
+                      "after_sale_type",
+                      "abnormal",
+                      "change_detail",
+                      "is_auto_routing",
+                      "is_pre_order",
+                      "affiliate_id",
+                      "has_invoice",
+                      "marketing_staff",
+                      "sales_person",
+                      "utm",
+                      "is_cod",
+                      "is_auto_gen_ref_id",
+                      "loyalty_point",
+                      "loyalty_point_earn",
+                      "loyalty_price",
+                      "loyalty_id",
+                      "rts_sla_time",
+                      "has_shipping_config_fee",
+                      "shipping_fee_gap",
+                      "shipping_config_fee",
+                      "ref_gsgn"
                   ],
                   "relationship": {
                       "variant": "object",
@@ -136,8 +203,9 @@
                   }
               },
               {
-                  "table": "sc_order_item",
-                  "primary_key": ["id", "sme_id"],
+                  "table": "old_order_item",
+                  "primary_key": ["id"],
+
                   "columns": [
                       "id",
                       "store_id",
@@ -184,16 +252,16 @@
                       "sme_product_sku",
                       "sme_variant_name",
                       "sme_variant_sku",
-                      "sme_variant_full_name"
+                      "sme_variant_full_name",
+                      "sme_variant_id_first",
+                      "weight",
+                      "length",
+                      "width",
+                      "height",
+                      "list_expiry",
+                      "gift_campaign_id",
+                      "loyalty_price"
                   ],
-                  "transform": {
-                    "mapping": {
-                        "weight": {
-                            "type": "float"
-                        }
-
-                    }
-                  },
                   "relationship": {
                       "variant": "object",
                       "type": "one_to_many",
@@ -201,25 +269,7 @@
                         "parent": ["id"],
                         "child": ["package_id"]
                     }
-                  },
-                  "children": [
-                    {
-                        "table": "sc_order_item_combo",
-                        "primary_key": ["id"],
-                        "columns": [
-                            "id",
-                            "order_item_id"
-                        ],
-                        "relationship": {
-                            "variant": "object",
-                            "type": "one_to_many",
-                            "foreign_key": {
-                                "parent": ["id"],
-                                "child": ["order_item_id"]
-                            }
-                        }
-                    }
-                  ]
+                  }
               }
           ]
       }
