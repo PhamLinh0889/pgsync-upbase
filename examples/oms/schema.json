@@ -138,6 +138,7 @@
               {
                   "table": "sc_order_item",
                   "primary_key": ["id", "sme_id"],
+                  "label": "orderItems",
                   "columns": [
                       "id",
                       "store_id",
@@ -205,6 +206,7 @@
                   "children": [
                     {
                         "table": "sc_order_item_combo",
+                        "label": "comboItems",
                         "primary_key": ["id"],
                         "columns": [
                             "id",

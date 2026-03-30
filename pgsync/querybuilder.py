@@ -3,6 +3,7 @@
 import threading
 import typing as t
 from collections import defaultdict
+import logging
 
 import sqlalchemy as sa
 
@@ -12,6 +13,7 @@ from .exc import ForeignKeyError
 from .node import Node
 from .settings import IS_MYSQL_COMPAT
 
+logger = logging.getLogger(__name__)
 
 def JSON_OBJECT(*args: t.Any) -> sa.sql.functions.Function:
     """JSON object constructor."""
@@ -479,13 +481,13 @@ class QueryBuilder(threading.local):
                     child._subquery.columns,
                     foreign_keys,
                     table=through.name,
-                    schema=child.schema,
+                    schema=through.schema,
                 )
                 right_foreign_keys: list = self._get_column_foreign_keys(
                     child.parent.model.columns,
                     foreign_keys,
                 )
-
+                logger.debug(f'left_foreign_keys {left_foreign_keys} right_foreign_keys {right_foreign_keys}')
                 for i in range(len(right_foreign_keys)):
                     onclause.append(
                         child._subquery.c[left_foreign_keys[i]]
@@ -513,8 +515,9 @@ class QueryBuilder(threading.local):
                         child.parent.model.columns,
                         foreign_keys,
                     )
-
+                logger.debug(f'foreign_keys {foreign_keys} left_foreign_keys {left_foreign_keys} right_foreign_keys {right_foreign_keys}')
                 for i in range(len(left_foreign_keys)):
+                    logger.debug(f'child._subquery.c[left_foreign_keys[i]] {child._subquery.c[left_foreign_keys[i]]} and right_foreign_keys[i] {child.parent.model.c[right_foreign_keys[i]]}')
                     onclause.append(
                         child._subquery.c[left_foreign_keys[i]]
                         == child.parent.model.c[right_foreign_keys[i]]
@@ -653,7 +656,7 @@ class QueryBuilder(threading.local):
                     child._subquery.columns,
                     child_foreign_keys,
                     table=child_through.table,
-                    schema=child.schema,
+                    schema=child_through.schema,
                 )
 
             else:
@@ -770,7 +773,7 @@ class QueryBuilder(threading.local):
             through.columns,
             base,
             table=through.table,
-            schema=node.schema,
+            schema=through.schema,
         )
 
         columns = [
